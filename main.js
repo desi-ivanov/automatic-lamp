@@ -7,8 +7,7 @@ const filename = "db.json";
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const chatIDS = [
-    "-1001253203905",
-    "-1001230449645",
+    "-1001253203905"
 ]
 
 monitor(60000);
