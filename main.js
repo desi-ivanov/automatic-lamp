@@ -6,16 +6,20 @@ const fs = require("fs");
 const filename = "db.json";
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const chatIDS = [
-    "-1001253203905"
-]
+const chatIDS = ["-1001253203905"]
+const toBase64 = s => Buffer.from(s).toString("base64");
+const authFetch = url => fetch(url, { headers: { Authorization: `Basic ${toBase64(`${process.env.ST123456}:${process.env.PASSWORD}`)}`}});
 
 monitor(60000);
 async function monitor(delay) {
     console.log("Will monitor each " + delay + " ms");
     while(true) {
         try {
-            const resText = await fetch(`https://${process.env.ST123456}:${process.env.PASSWORD}@wwwold.educ.di.unito.it/OffertaTesi/index.php`).then(r => r.text());
+            const res = await authFetch(`https://wwwold.educ.di.unito.it/OffertaTesi/index.php`);
+            if(!res.ok) {
+                throw new Error("Error while fetching: " + res.statusText + ". Status: " + res.status);
+            }
+            const resText = await res.text();
             const matches = resText.match(/getDoc.+?<\//g).map(plain => {
                 const id = plain.match(/\d+/)[0];
                 return {
@@ -43,8 +47,8 @@ async function parseMatches(entries) {
     const filedata = JSON.parse(fs.readFileSync(filename).toString());
     for(let entry of entries) {
         if(fileExisted && filedata[entry.id] === undefined) {
-            const fres = await fetch(entry.url.replace(/http(s?):\/\//, `http$1://${process.env.ST123456}:${process.env.PASSWORD}@`));
-            if(!fres.ok || !fres.headers.has("content-type") === undefined) {
+            const fres = await authFetch(entry.url);
+            if(!fres.ok || !fres.headers.has("content-type")) {
                 throw new Error(await fres.text());
             }
             const fpath = path.resolve(__dirname, Date.now() + (fres.headers.get("content-type").match(/pdf/i) ? ".pdf" : ".txt"));
