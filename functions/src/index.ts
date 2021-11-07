@@ -52,7 +52,7 @@ async function sendUnseen(entries: Entry[]) {
   for(const entry of entries) {
     try {
       if(!memo.ids.includes(entry.id)) {
-        const sha256 = await sendEntry(entry);
+        const { sha256 } = await sendEntry(entry);
         await firestore().collection("offerte_stage").doc(entry.id).set({ ...entry, sha256 });
         memo.ids.push(entry.id);
       }
