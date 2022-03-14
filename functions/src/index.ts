@@ -47,13 +47,15 @@ export const check = functions.pubsub.schedule("every minute").onRun(async () =>
 });
 
 async function sendUnseen(entries: Entry[]) {
-  const all = firestore().collection("offerte_stage").doc("all");
+  const db =  firestore()
+  db.settings({ ignoreUndefinedProperties: true })
+  const all = db.collection("offerte_stage").doc("all");
   const memo = ((await all.get()).data() ?? { ids: entries.map((e) => e.id) }) as { ids: string[] };
   for(const entry of entries) {
     try {
       if(!memo.ids.includes(entry.id)) {
         const { sha256 } = await sendEntry(entry);
-        await firestore().collection("offerte_stage").doc(entry.id).set({ ...entry, sha256 });
+        await db.collection("offerte_stage").doc(entry.id).set({ ...entry, sha256 });
         memo.ids.push(entry.id);
       }
     } catch(err) {
