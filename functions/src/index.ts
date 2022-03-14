@@ -18,6 +18,8 @@ if(!unito.st123456 || !unito.password || !tg.tg_bot_key) {
 }
 
 initializeApp();
+const db =  firestore();
+db.settings({ ignoreUndefinedProperties: true });
 
 const chatIDS = ["-1001253203905"];
 const toBase64 = (s: string): string => Buffer.from(s).toString("base64");
@@ -47,8 +49,6 @@ export const check = functions.pubsub.schedule("every minute").onRun(async () =>
 });
 
 async function sendUnseen(entries: Entry[]) {
-  const db =  firestore()
-  db.settings({ ignoreUndefinedProperties: true })
   const all = db.collection("offerte_stage").doc("all");
   const memo = ((await all.get()).data() ?? { ids: entries.map((e) => e.id) }) as { ids: string[] };
   for(const entry of entries) {
