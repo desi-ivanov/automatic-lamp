@@ -6,7 +6,7 @@ import * as crypto from "crypto";
 
 type Entry = {
   title: string;
-  sede: string | undefined;
+  sede: string | null;
   url: string;
   id: string;
 }
@@ -18,8 +18,6 @@ if(!unito.st123456 || !unito.password || !tg.tg_bot_key) {
 }
 
 initializeApp();
-const db =  firestore();
-db.settings({ ignoreUndefinedProperties: true });
 
 const chatIDS = ["-1001253203905"];
 const toBase64 = (s: string): string => Buffer.from(s).toString("base64");
@@ -37,8 +35,8 @@ export const check = functions.pubsub.schedule("every minute").onRun(async () =>
       .map((plain) => [plain, plain.match(/\d+/)?.[0]] as [string, string | undefined])
       .filter((x): x is [string, string] => x[1] !== undefined)
       .map(([plain, id]) => ({
-        title: plain.substr(plain.indexOf(">") + 1, plain.lastIndexOf("<") - plain.lastIndexOf(">") - 1),
-        sede: resText.substr(resText.indexOf(id)).match(/(interna)|(esterna)/i)?.[0],
+        title: plain.substring(plain.indexOf(">") + 1, plain.lastIndexOf(">") - 1),
+        sede: resText.substring(resText.indexOf(id)).match(/(interna)|(esterna)/i)?.[0] ?? null,
         url: "https://wwwold.educ.di.unito.it/OffertaTesi/getDoc.php?id=" + id,
         id,
       }));
@@ -49,13 +47,13 @@ export const check = functions.pubsub.schedule("every minute").onRun(async () =>
 });
 
 async function sendUnseen(entries: Entry[]) {
-  const all = db.collection("offerte_stage").doc("all");
+  const all = firestore().collection("offerte_stage").doc("all");
   const memo = ((await all.get()).data() ?? { ids: entries.map((e) => e.id) }) as { ids: string[] };
   for(const entry of entries) {
     try {
       if(!memo.ids.includes(entry.id)) {
         const { sha256 } = await sendEntry(entry);
-        await db.collection("offerte_stage").doc(entry.id).set({ ...entry, sha256 });
+        await firestore().collection("offerte_stage").doc(entry.id).set({ ...entry, sha256 });
         memo.ids.push(entry.id);
       }
     } catch(err) {
