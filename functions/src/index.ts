@@ -88,9 +88,7 @@ async function sendMultimedia(message: string, document: Buffer, filename: strin
   const form = new FormData();
   form.append("caption", message);
   form.append("document", document, { filename });
-  console.log("sending");
   const res = await fetch(`https://api.telegram.org/${tg.tg_bot_key}/sendDocument?chat_id=${chatId}&parse_mode=markdown`, { method: "POST", body: form });
-  console.log("Sent", await res.text());
   if(!res.ok) {
     throw new Error(await res.text());
   }
