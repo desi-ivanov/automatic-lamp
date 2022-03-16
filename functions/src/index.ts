@@ -35,7 +35,7 @@ export const check = functions.pubsub.schedule("every minute").onRun(async () =>
       .map((plain) => [plain, plain.match(/\d+/)?.[0]] as [string, string | undefined])
       .filter((x): x is [string, string] => x[1] !== undefined)
       .map(([plain, id]) => ({
-        title: plain.substring(plain.indexOf(">") + 1, plain.lastIndexOf(">") - 1),
+        title: plain.match(/>.+?</)?.[0].slice(1, -1) ?? "",
         sede: resText.substring(resText.indexOf(id)).match(/(interna)|(esterna)/i)?.[0] ?? null,
         url: "https://wwwold.educ.di.unito.it/OffertaTesi/getDoc.php?id=" + id,
         id,
